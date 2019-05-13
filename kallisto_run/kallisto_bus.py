@@ -1,6 +1,49 @@
 import os
 import sys
 import subprocess
+import gzip
+from Bio import SeqIO
+from collections import Counter
+import numpy as np
+
+def check_r1_polyT(input, r1_files, r2_files):
+    poly_t_r1 = []
+    poly_t_r2 = []
+    for r1 in r1_files:
+        i= 0
+        with gzip.open(os.path.join(input, r1), "rt") as handle1:
+            for record1 in SeqIO.parse(handle1, "fastq"):
+                if i <300:
+                    i+=1
+                    seq = record1.seq
+                    poly_t_r1.append(Counter(seq)['T']/len(seq))
+                else:
+                    break
+    for r2 in r2_files:
+        i= 0
+        with gzip.open(os.path.join(input, r2), "rt") as handle2:
+            for record2 in SeqIO.parse(handle2, "fastq"):
+                if i <300:
+                    i+=1
+                    seq = record2.seq
+                    poly_t_r2.append(Counter(seq)['T']/len(seq))
+                else:
+                    break
+    r2_t_mean = np.array(poly_t_r2).mean()
+    r1_t_mean = np.array(poly_t_r1).mean()
+    if  r2_t_mean > r1_t_mean:
+        print('R2 files appear polyT enriched, switching order.')
+        print('R2 mean: ', r2_t_mean)
+        print('R1 mean: ', r1_t_mean)
+        fq_zipped = zip(r2_files, r1_files)
+        return fq_zipped
+    else:
+        print('R2 mean: ', r2_t_mean)
+        print('R1 mean: ', r1_t_mean)
+        fq_zipped = zip(r1_files, r2_files)
+        return fq_zipped
+
+
 
 def run_kallisto_bus(input, kallisto_idx, out, args):
     r1_files = []
@@ -15,8 +58,8 @@ def run_kallisto_bus(input, kallisto_idx, out, args):
                     r2_files.append(fq)
         r1_files.sort()
         r2_files.sort()
-        print(r1_files, r2_files)
-        fq_zipped = zip(r1_files, r2_files)
+        fq_zipped  = check_r1_polyT(input, r1_files, r2_files)
+
         ordered_fastqs = []
         for (r1, r2) in fq_zipped:
             ordered_fastqs.append(os.path.join(input,r1))
