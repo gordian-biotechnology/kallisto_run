@@ -63,6 +63,6 @@ setup(
     entry_points={
           'console_scripts': ['kallisto_run = kallisto_run.kallisto_run:main']
         },
-    version='0.1.0',
+    version='0.2.0',
     zip_safe=False,
 )
