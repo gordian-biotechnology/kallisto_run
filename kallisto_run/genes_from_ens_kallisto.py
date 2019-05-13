@@ -84,21 +84,21 @@ def make_kallisto_refs(ref_path, args):
         t2g_path = os.path.join(ref_path, 'human_transcript_to_gene.tsv')
         path_to_ref = os.path.join(ref_path, 'Homo_sapiens.GRCh38.cdna.all.fa.gz')
         path_to_anno = os.path.join(ref_path, 'Homo_sapiens.GRCh38.94.gtf.gz')
-        if not os.path.exists(os.path.join(ref_path, 'Homo_sapiens.GRCh38.cdna.all.fa.gz')):
+        if not os.path.exists(path_to_ref) and not os.path.exists(path_to_ref[0:-3]):
             wget_cmd = "wget -O %s ftp://ftp.ensembl.org/pub/release-96/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz" %(path_to_ref)
             run_wget = True
-        if not os.path.exists(os.path.join(ref_path, 'Homo_sapiens.GRCh38.94.gtf.gz')) and not os.path.exists(os.path.join(ref_path, 'Homo_sapiens.GRCh38.94.gtf')):
+        if not os.path.exists(path_to_anno) and not os.path.exists(path_to_anno[0:-3]):
             wget_cmd += '&& wget -O %s ftp://ftp.ensembl.org/pub/release-94/gtf/homo_sapiens/Homo_sapiens.GRCh38.94.gtf.gz' %(path_to_anno)
     elif species.lower() == 'mouse':
         ref='Mus_musculus.GRCm38'
         ens_='ENSMUS'
         t2g_path = os.path.join(ref_path, 'mouse_transcript_to_gene.tsv')
         path_to_ref = os.path.join(ref_path, 'Mus_musculus.GRCm38.cdna.all.fa.gz')
-        path_to_anno = os.path.join(ref_path, 'Mus_musculus.GRCm38.cdna.all.fa.gz')
-        if not os.path.exists(os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf.gz')):
+        path_to_anno = os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf.gz')
+        if not os.path.exists(path_to_ref) and not os.path.exists(path_to_ref[0:-3]):
             wget_cmd = "wget -O %s ftp://ftp.ensembl.org/pub/release-96/fasta/mus_musculus/cdna/Mus_musculus.GRCm38.cdna.all.fa.gz" %(path_to_ref)
             run_wget = True
-        if not os.path.exists(os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf.gz')) and not os.path.exists(os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf')):
+        if not os.path.exists(path_to_anno) and not os.path.exists(path_to_anno[0:-3]):
             wget_cmd += '&& wget -O %s ftp://ftp.ensembl.org/pub/release-94/gtf/mus_musculus/Mus_musculus.GRCm38.94.gtf.gz' %(path_to_anno)
     elif species.lower() == 'mouse_human':
         ref='Mus_human.GRCm38'
@@ -111,18 +111,18 @@ def make_kallisto_refs(ref_path, args):
         path_to_ref  = os.path.join(ref_path, 'human_mouse_contatenated_transcriptome.fa')
         path_to_anno = os.path.join(ref_path, 'human_mouse_contatenated_GTF.gtf')
         wget_cmd = ''
-        if not os.path.exists(path_to_ref1):
+        if not os.path.exists(path_to_ref1) and not os.path.exists(path_to_ref1[0:-3]):
             wget_cmd = "wget -O %s ftp://ftp.ensembl.org/pub/release-96/fasta/mus_musculus/cdna/Mus_musculus.GRCm38.cdna.all.fa.gz" %(path_to_ref)
             run_wget = True
-        if not os.path.exists(path_to_ref2):
+        if not os.path.exists(path_to_ref2) and not os.path.exists(path_to_ref2[0:-3]):
             if wget_cmd:
                 wget_cmd += "&& wget -O %s ftp://ftp.ensembl.org/pub/release-96/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz" %(path_to_ref)
             else:
                 wget_cmd = "wget -O %s ftp://ftp.ensembl.org/pub/release-96/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz" %(path_to_ref)
             run_wget = True
-        if not os.path.exists(os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf.gz')) and not os.path.exists(os.path.join(ref_path, 'Mus_musculus.GRCm38.94.gtf')):
+        if not os.path.exists(path_to_anno1) and not os.path.exists(path_to_anno1[0:-3]):
             wget_cmd += '&& wget -O %s ftp://ftp.ensembl.org/pub/release-94/gtf/mus_musculus/Mus_musculus.GRCm38.94.gtf.gz' %(path_to_anno1)
-        if not os.path.exists(os.path.join(ref_path, 'Homo_sapiens.GRCh38.94.gtf.gz')) and not os.path.exists(os.path.join(ref_path, 'Homo_sapiens.GRCh38.94.gtf')):
+        if not os.path.exists(path_to_anno2) and not os.path.exists(path_to_anno2[0:-3]):
             wget_cmd += '&& wget -O %s ftp://ftp.ensembl.org/pub/release-94/gtf/homo_sapiens/Homo_sapiens.GRCh38.94.gtf.gz' %(path_to_anno2)
         if not os.path.exists(path_to_ref):
             wget_cmd += 'gunzip -v %s && gunzip -v %s && cat %s %s > %s' %(path_to_ref1,  path_to_ref2, path_to_ref1.strip('.gz'), path_to_ref2.strip('.gz'), os.path.join(ref_path, 'human_mouse_contatenated_transcriptome.fa'))
@@ -270,6 +270,9 @@ def anndata_from_mtx(outpath, name):
     import numpy as np
     import pandas as pd
     import scanpy.api as sc
+    import scrublet as scr
+    from scipy import sparse
+    from skimage.filters import threshold_minimum
 
     sc.settings.verbosity = 3  # verbosity: errors (0), warnings (1), info (2), hints (3)
     sc.logging.print_versions()
@@ -282,5 +285,15 @@ def anndata_from_mtx(outpath, name):
     adata.var_names = pd.read_csv(os.path.join(outpath,'genes.tsv'), header=None, sep='\t')[0]
     adata.obs_names = pd.read_csv(os.path.join(outpath,'barcodes.tsv'), header=None, sep='\t')[0]
     adata.var_names_make_unique()
+    counts_matrix = sparse.csc_matrix(adata.X)
+
+    scrub = scr.Scrublet(counts_matrix, expected_doublet_rate=round(counts_matrix.shape[0]/125000, 4))
+    doublet_scores, predicted_doublets = scrub.scrub_doublets(min_counts=2,
+                                                          min_cells=3,
+                                                          min_gene_variability_pctl=85,
+                                                          n_prin_comps=30)
+    threshold = threshold_minimum(scrub.doublet_scores_sim_)
+    adata.obs['doublet_score'] = scrub.doublet_scores_obs_
+    adata.uns['doublet_threshold'] = threshold
     adata.write_h5ad(results_file)
     return adata
