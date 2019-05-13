@@ -31,6 +31,7 @@ def run_analysis(adata, outpath, name, species, tr2g_path):
     sc.pp.filter_cells(adata, min_genes=min_genes)
     sc.pp.filter_genes(adata, min_cells=min_cells)
     sc.pp.filter_cells(adata, min_genes=1)
+    adata = adata[adata.obs['doublet_score']<adata.uns['doublet_threshold']]
     sc.pp.calculate_qc_metrics(adata, inplace=True)
     if species == 'mouse':
         mito_genes = adata.var_names.str.startswith("mt-")
